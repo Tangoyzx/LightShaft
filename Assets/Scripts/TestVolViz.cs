@@ -4,12 +4,13 @@ using System.Collections;
 public class TestVolViz : MonoBehaviour {
 	public SimulateSpotLight light;
 	public Material mat;
+	public Camera viewer;
 	// Use this for initialization
 	void Start () {
 		var mf = gameObject.AddComponent<MeshFilter>();
 		var mr = gameObject.AddComponent<MeshRenderer>();
 
-		var numShells = 20;
+		var numShells = 100;
 		var numRows = 1;
 		var numColnums = 1;
 
@@ -68,5 +69,9 @@ public class TestVolViz : MonoBehaviour {
 	void LateUpdate () {
 		mat.SetVector("vMinBound", light.vMinBound);
 		mat.SetVector("vMaxBound", light.vMaxBound);
+		mat.SetMatrix("worldToViewMat", viewer.transform.worldToLocalMatrix);
+		mat.SetMatrix("viewToWorldMat", viewer.transform.localToWorldMatrix);
+		mat.SetMatrix("worldToLightMat", light.transform.worldToLocalMatrix);
+		mat.SetMatrix("lightToWorldMat", light.transform.localToWorldMatrix);
 	}
 }

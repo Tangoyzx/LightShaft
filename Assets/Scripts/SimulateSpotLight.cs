@@ -6,6 +6,7 @@ public class SimulateSpotLight : MonoBehaviour {
 	public float aspect = 720.0f / 1280.0f;
 	public float near = 1;
 	public float far = 50;
+	public Camera viewer;
 
 	[HideInInspector]
 	public Vector3 vMinBound;
@@ -44,7 +45,8 @@ public class SimulateSpotLight : MonoBehaviour {
 		vMaxBound.y = float.MinValue;
 		vMaxBound.z = float.MinValue;
 
-		var matFrustumWorld = transform.localToWorldMatrix;
+		var matFrustumWorld = viewer.transform.worldToLocalMatrix * transform.localToWorldMatrix;
+		// var matFrustumWorld = transform.localToWorldMatrix;
 		
 		for(int i = 0; i < 8; i++)
 		{
@@ -57,7 +59,6 @@ public class SimulateSpotLight : MonoBehaviour {
 			vMaxBound.y = Mathf.Max(worldPos.y, vMaxBound.y);
 			vMaxBound.z = Mathf.Max(worldPos.z, vMaxBound.z);
 		}
-		Debug.Log(vMinBound);
 		
 	}
 
@@ -65,9 +66,9 @@ public class SimulateSpotLight : MonoBehaviour {
 	 {
 		Gizmos.matrix = transform.localToWorldMatrix;
 		Gizmos.color = Color.red;
-		Gizmos.DrawFrustum(transform.position, fieldOfView, far, near, aspect);
+		Gizmos.DrawFrustum(Vector3.zero, fieldOfView, far, near, aspect);
 
-		Gizmos.matrix = Matrix4x4.identity;
+		Gizmos.matrix = viewer.transform.localToWorldMatrix;
 		Gizmos.color = Color.blue;
 		Gizmos.DrawLine(new Vector3(vMinBound.x, vMinBound.y, vMinBound.z), new Vector3(vMaxBound.x, vMinBound.y, vMinBound.z));
 		Gizmos.DrawLine(new Vector3(vMinBound.x, vMinBound.y, vMinBound.z), new Vector3(vMinBound.x, vMaxBound.y, vMinBound.z));
@@ -83,5 +84,6 @@ public class SimulateSpotLight : MonoBehaviour {
 		Gizmos.DrawLine(new Vector3(vMinBound.x, vMinBound.y, vMaxBound.z), new Vector3(vMinBound.x, vMaxBound.y, vMaxBound.z));
 		Gizmos.DrawLine(new Vector3(vMaxBound.x, vMinBound.y, vMaxBound.z), new Vector3(vMaxBound.x, vMaxBound.y, vMaxBound.z));
 		Gizmos.DrawLine(new Vector3(vMaxBound.x, vMaxBound.y, vMaxBound.z), new Vector3(vMinBound.x, vMaxBound.y, vMaxBound.z));
+		Gizmos.matrix = Matrix4x4.identity;
 	 }
 }
