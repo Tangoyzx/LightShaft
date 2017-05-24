@@ -3,10 +3,13 @@ using System.Collections;
 
 public class TestVolViz : MonoBehaviour {
 	public SimulateSpotLight light;
+	public RenderTexture shadowMap;
 	public Material mat;
 	public Camera viewer;
+	public Transform debugCube;
 	// Use this for initialization
 	void Start () {
+		InitLightZBuffer();
 		var mf = gameObject.AddComponent<MeshFilter>();
 		var mr = gameObject.AddComponent<MeshRenderer>();
 
@@ -69,9 +72,22 @@ public class TestVolViz : MonoBehaviour {
 	void LateUpdate () {
 		mat.SetVector("vMinBound", light.vMinBound);
 		mat.SetVector("vMaxBound", light.vMaxBound);
+		
 		mat.SetMatrix("worldToViewMat", viewer.transform.worldToLocalMatrix);
 		mat.SetMatrix("viewToWorldMat", viewer.transform.localToWorldMatrix);
 		mat.SetMatrix("worldToLightMat", light.transform.worldToLocalMatrix);
 		mat.SetMatrix("lightToWorldMat", light.transform.localToWorldMatrix);
+		mat.SetMatrix("lightProjectionMat", light.shadowCamera.projectionMatrix);
+	}
+
+	private void InitLightZBuffer() {
+		var zc1 = light.far/light.near;
+		var zc0 = 1.0f - zc1;
+		var zc2 = zc0 / light.far;
+		var zc3 = zc1 / light.far;
+
+		var vv = new Vector4(zc0, zc1, zc2, zc3);
+		Debug.Log("zb: " + vv);
+		mat.SetVector("_LightZBufferParams", vv);
 	}
 }

@@ -7,17 +7,25 @@ public class SimulateSpotLight : MonoBehaviour {
 	public float near = 1;
 	public float far = 50;
 	public Camera viewer;
+	public RenderTexture shadowTexture;
 
 	[HideInInspector]
 	public Vector3 vMinBound;
 
 	[HideInInspector]
 	public Vector3 vMaxBound;
+	public Camera shadowCamera;
 
 	private Vector4[] vertices;
 
 	void Awake()
 	{
+		shadowCamera = GetComponent<Camera>();
+		fieldOfView = shadowCamera.fieldOfView;
+		aspect = shadowCamera.aspect;
+		near = shadowCamera.near;
+		far = shadowCamera.far;
+
 		var nearWidth = near * Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad);
 		var farWidth = nearWidth * far / near;
 
@@ -64,9 +72,10 @@ public class SimulateSpotLight : MonoBehaviour {
 
 	 void OnDrawGizmos()
 	 {
+		 return;
 		Gizmos.matrix = transform.localToWorldMatrix;
 		Gizmos.color = Color.red;
-		Gizmos.DrawFrustum(Vector3.zero, fieldOfView, far, near, aspect);
+		Gizmos.DrawFrustum(Vector3.forward, fieldOfView, far, near, aspect);
 
 		Gizmos.matrix = viewer.transform.localToWorldMatrix;
 		Gizmos.color = Color.blue;
