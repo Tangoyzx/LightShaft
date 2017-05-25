@@ -2,13 +2,14 @@
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
 		_ShadowTex("Texture", 2D) = "white" {}
+		_MaskTex("Texture", 2D) = "white" {}
+		_NoiseTex("Texture", 2D) = "white" {}
 		_LightZBufferParams("_LightZBufferParams", Vector) = (0, 0, 0, 0)
 	}
 	SubShader
 	{
-		Tags { "RenderType"="Opaque"}
+		Tags { "RenderType"="Opaque" "Queue"="Transparent"}
 		LOD 100
 		Cull Off
 		Blend One One
@@ -24,20 +25,18 @@
 			struct appdata
 			{
 				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;
 			};
 
 			struct v2f
 			{
-				float2 uv : TEXCOORD0;
 				float4 vertex : SV_POSITION;
 				float3 lightPos : TEXCOORD1;
 				float4 lightPPos : TEXCOORD2;
 			};
 
-			sampler2D _MainTex;
 			sampler2D _ShadowTex;
-			float4 _MainTex_ST;
+			sampler2D _MaskTex;
+			sampler2D _NoiseTex;
 			float4 vMinBound, vMaxBound;
 
 			float4 _LightZBufferParams;
@@ -58,27 +57,30 @@
 				o.lightPos = mul(worldToLightMat, pos);
 				o.lightPPos = mul(lightProjectionMat, o.lightPos);
 				o.vertex = mul(UNITY_MATRIX_VP, pos);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-				float2 lightUV = i.lightPPos.xy / -i.lightPPos.w * 0.5 + 0.5;
+				float area = 0.8;
+				float2 lightUV = i.lightPPos.xy / -i.lightPPos.w;
+
+				lightUV = lightUV * 0.5 + 0.5;
+
+				fixed3 maskColor = tex2D(_MaskTex, lightUV).rgb;
+				fixed3 noiseColor = tex2D(_NoiseTex, lightUV + _Time.xx * 3).rgb;
+
 				float sampleDepthZ = 1 - tex2D(_ShadowTex, lightUV).r;
 				float sampleDepth = 1.0 / (_LightZBufferParams.z * sampleDepthZ + _LightZBufferParams.w);
 
-				float b = step(i.lightPos.z, sampleDepth);
-				float xx = abs(i.lightPos.z - sampleDepth);
+				float inShadow = step(i.lightPos.z, sampleDepth);
 
-				float mark = step(dot(i.lightPos.xy, i.lightPos.xy), 5);
+				float centerFalloff = step(0, lightUV.x) * step(lightUV.x, 1) * step(0, lightUV.y) * step(lightUV.y, 1);
+
 				float atten = 1.0 / dot(i.lightPos.xyz, i.lightPos.xyz);
 
-				// return fixed4(b, 0, 0, 1);
-				// return fixed4(i.lightPos.z-1, 0, 0, 1);
-				// return fixed4(sampleDepth-1.5, 0, 0, sampleDepth-1.5);
-				return fixed4(b*mark*atten, 0, 0, 1);
-				// return fixed4(0.1 * mark, 0.1 * mark, 0.1 * mark, 1);
+				fixed3 c = atten * inShadow * centerFalloff * maskColor * noiseColor * noiseColor * 1;
+				return fixed4(c, 1);
 			}
 			ENDCG
 		}
