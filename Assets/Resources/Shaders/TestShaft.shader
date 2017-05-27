@@ -4,8 +4,7 @@
 	{
 		_ShadowTex("Shadow Tex", 2D) = "white" {}
 		_MaskTex("Mask Tex", 2D) = "white" {}
-		_NoiseTex1("Noise Tex 1", 2D) = "white" {}
-		_NoiseTex2("Noise Tex 2", 2D) = "white" {}
+		_NoiseTex("Noise Tex", 2D) = "white" {}
 		_LightZBufferParams("_LightZBufferParams", Vector) = (0, 0, 0, 0)
 	}
 	SubShader
@@ -37,8 +36,7 @@
 
 			sampler2D _ShadowTex;
 			sampler2D _MaskTex;
-			sampler2D _NoiseTex1;
-			sampler2D _NoiseTex2;
+			sampler2D _NoiseTex;
 			float4 vMinBound, vMaxBound;
 
 			float4 _LightZBufferParams;
@@ -70,8 +68,8 @@
 				lightUV = lightUV * 0.5 + 0.5;
 
 				fixed3 maskColor = tex2D(_MaskTex, lightUV).rgb;
-				fixed3 noiseColor1 = tex2D(_NoiseTex1, lightUV + _Time.xx * 0.13).rgb;
-				fixed3 noiseColor2 = tex2D(_NoiseTex2, lightUV - _Time.xy * 0.17).rgb;
+				fixed noiseColor1 = tex2D(_NoiseTex, lightUV + _Time.xx * 0.13).r;
+				fixed noiseColor2 = tex2D(_NoiseTex, lightUV - _Time.xy * 0.17).g;
 
 				float sampleDepthZ = 1 - tex2D(_ShadowTex, lightUV).r;
 				float sampleDepth = 1.0 / (_LightZBufferParams.z * sampleDepthZ + _LightZBufferParams.w);
@@ -82,7 +80,7 @@
 
 				float atten = 1.0 / dot(i.lightPos.xyz, i.lightPos.xyz);
 
-				fixed3 c = atten * inShadow * centerFalloff * maskColor * noiseColor1 * noiseColor2 * 2;
+				fixed3 c = atten * inShadow * centerFalloff * maskColor * noiseColor1 * noiseColor2 * 5;
 				return fixed4(c, 1);
 			}
 			ENDCG
